@@ -13,4 +13,5 @@ public class ModelData {
     public final KMeans model;
     public final List<String> vocabulary;
     public final ClusterProfiler clusterProfiler;
+    public final double[][] features;
 }

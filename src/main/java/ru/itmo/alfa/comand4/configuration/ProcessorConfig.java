@@ -17,12 +17,8 @@ import java.util.List;
 @Configuration
 public class ProcessorConfig {
 
-    /**
-     * Обучение модели на основе данных CSV файла
-     * @return
-     */
     @Bean
-    public TicketProcessor createFromCsvFile(@Value("${datasource.csv.filepath}") String filePath) {
+    public ModelData getModelData(@Value("${datasource.csv.filepath}") String filePath) {
         // Загрузка данных
         List<SupportTicket> tickets = new CsvTicketSource(filePath).getAllTicket();
 
@@ -45,8 +41,8 @@ public class ProcessorConfig {
         int[] clusterAssignments = model.y; // Получаем назначения кластеров
         clusterProfiler.buildFromTickets(tickets, clusterAssignments);
 
-        TicketProcessor processor = new TicketProcessor(new ModelData(model, vocabulary, clusterProfiler));
-        return processor;
+        return new ModelData(model, vocabulary, clusterProfiler, features);
     }
+
 
 }

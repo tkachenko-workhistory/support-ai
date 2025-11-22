@@ -56,6 +56,12 @@
             <artifactId>smile-nlp</artifactId>
             <version>3.0.1</version>
         </dependency>
+        <!-- Для визуализации -->
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-plot</artifactId>
+            <version>3.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>

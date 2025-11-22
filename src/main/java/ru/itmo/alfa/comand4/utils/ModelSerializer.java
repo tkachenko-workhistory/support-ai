@@ -9,11 +9,12 @@ import java.util.List;
 
 public class ModelSerializer {
 
-    public static void saveModel(KMeans model, List<String> vocabulary, ClusterProfiler clusterProfiler, String filename) {
+    public static void saveModel(KMeans model, List<String> vocabulary, ClusterProfiler clusterProfiler, double[][] features, String filename) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
             oos.writeObject(model);
             oos.writeObject(vocabulary);
             oos.writeObject(clusterProfiler);
+            oos.writeObject(features);
             System.out.println("Модель сохранена: " + filename);
         } catch (IOException e) {
             System.err.println("Ошибка сохранения: " + e.getMessage());
@@ -25,7 +26,8 @@ public class ModelSerializer {
             KMeans model = (KMeans) ois.readObject();
             List<String> vocabulary = (List<String>) ois.readObject();
             ClusterProfiler clusterProfiler = (ClusterProfiler) ois.readObject();
-            return new ModelData(model, vocabulary, clusterProfiler);
+            double[][] features = (double[][]) ois.readObject();
+            return new ModelData(model, vocabulary, clusterProfiler, features);
         } catch (Exception e) {
             System.err.println("Ошибка загрузки: " + e.getMessage());
             return null;

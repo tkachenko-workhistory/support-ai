@@ -1,5 +1,6 @@
 package ru.itmo.alfa.comand4.service;
 
+import org.springframework.stereotype.Service;
 import ru.itmo.alfa.comand4.model.dto.SimilarTicket;
 import ru.itmo.alfa.comand4.model.dto.TicketRequest;
 import ru.itmo.alfa.comand4.model.dto.TicketResponse;
@@ -16,6 +17,7 @@ import java.util.List;
 /**
  * Класс для обработки новых заявок
  */
+@Service
 public class TicketProcessor {
 
     private final List<String> vocabulary;

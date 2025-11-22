@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ClusterProfiler {
+
     private Map<Integer, ClusterProfile> clusterProfiles = new HashMap<>();
 
     /**
