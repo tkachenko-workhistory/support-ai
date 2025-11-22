@@ -9,16 +9,25 @@ import ru.itmo.alfa.comand4.repository.CsvTicketSource;
 import ru.itmo.alfa.comand4.service.ClusterProfiler;
 import ru.itmo.alfa.comand4.service.TicketProcessor;
 import ru.itmo.alfa.comand4.utils.ClusterCounting;
+import ru.itmo.alfa.comand4.utils.StopWordsUtil;
 import ru.itmo.alfa.comand4.utils.VectorizeText;
 import smile.clustering.KMeans;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 
 @Configuration
 public class ProcessorConfig {
 
     @Bean
-    public ModelData getModelData(@Value("${datasource.csv.filepath}") String filePath) {
+    public ModelData getModelData(
+            @Value("${datasource.csv.filepath}") String filePath
+    ) {
         // Загрузка данных
         List<SupportTicket> tickets = new CsvTicketSource(filePath).getAllTicket();
 
@@ -29,6 +38,12 @@ public class ProcessorConfig {
 
         // Создать словарь
         List<String> vocabulary = VectorizeText.getVocabulary(documents);
+        try {
+            StopWordsUtil stopWords = new StopWordsUtil();
+            vocabulary = vocabulary.stream().filter(v -> !stopWords.contains(v)).toList();
+        } catch (IOException e) {
+        }
+
         // Векторизация
         double[][] features = VectorizeText.vectorize(documents, vocabulary);
 
@@ -43,6 +58,5 @@ public class ProcessorConfig {
 
         return new ModelData(model, vocabulary, clusterProfiler, features);
     }
-
 
 }

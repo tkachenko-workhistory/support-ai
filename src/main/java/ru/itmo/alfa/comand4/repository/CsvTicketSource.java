@@ -26,7 +26,7 @@ public class CsvTicketSource implements TicketHistory {
             // Пропускаем заголовок
             for (int i = 1; i < allData.size(); i++) {
                 String[] row = allData.get(i);
-                if (row.length >= 6) {
+                if (row.length >= 7) {
                     tickets.add(new SupportTicket(row));
                 }
             }

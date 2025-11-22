@@ -32,7 +32,7 @@ public class TicketProcessor {
 
     public TicketResponse processNewTicket(TicketRequest request) {
         // Векторизуем новую заявку
-        double[] features = VectorizeText.vectorize(request.getCustomerIssue() + " " + request.getDescription(), vocabulary);
+        double[] features = VectorizeText.vectorize(request.getDescription(), vocabulary);
 
         // Предсказываем кластер
         int clusterId = model.predict(features);

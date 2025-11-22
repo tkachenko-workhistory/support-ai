@@ -1,7 +1,12 @@
 package ru.itmo.alfa.comand4.utils;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.ru.RussianAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -105,12 +110,35 @@ public class VectorizeText {
                 .collect(Collectors.toList());
     }
 
-    private static String[] preprocessText(String text) {
+    /*private static String[] preprocessText(String text) {
         return text.toLowerCase()
-                .replaceAll("[^a-zA-Z\\s]", " ") // Удаляем спецсимволы
+                .replaceAll("[^a-zа-яё\\s]", " ") // Удаляем спецсимволы
                 .replaceAll("\\s+", " ")         // Убираем лишние пробелы
                 .trim()
                 .split("\\s+");
+    }*/
+
+    public static String[] preprocessText(String text)  {
+        List<String> result = new ArrayList<>();
+        try (Analyzer analyzer = new RussianAnalyzer()) {
+            try (TokenStream tokenStream = analyzer.tokenStream("content", text)) {
+                CharTermAttribute attribute = tokenStream.addAttribute(CharTermAttribute.class);
+                tokenStream.reset();
+
+                while (tokenStream.incrementToken()) {
+                    String term = attribute.toString();
+                    if (term.length() > 2) {
+                        result.add(term);
+                    }
+                }
+
+                tokenStream.end();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return result.toArray(new String[result.size()]);
     }
 
 }
