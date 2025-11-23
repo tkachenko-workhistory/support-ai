@@ -8,11 +8,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
-public class StopWordsUtil {
+public class StopWords {
 
     Set<String> words = new HashSet<>();
 
-    public StopWordsUtil() throws IOException {
+    public StopWords() throws IOException {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         InputStream is = classloader.getResourceAsStream("morfology/stopwords.txt");
         InputStreamReader streamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
