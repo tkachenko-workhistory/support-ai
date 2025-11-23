@@ -1,5 +1,6 @@
 package ru.itmo.alfa.comand4.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import ru.itmo.alfa.comand4.service.TicketProcessor;
 @RestController
 @RequestMapping("/api/processing")
 @AllArgsConstructor
+@Tag(name = "Ticked Processing", description = "API для обработки запросов")
 public class TickedProcessingController {
 
     private final TicketProcessor ticketProcessor;

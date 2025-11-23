@@ -1,5 +1,6 @@
 package ru.itmo.alfa.comand4.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,6 +16,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/visualization")
 @AllArgsConstructor
+@Tag(name = "Visualization", description = "API для визуализации кластеров")
 public class VisualizationController {
 
     private final ModelData modelData;
