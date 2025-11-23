@@ -1,27 +1,35 @@
 package ru.itmo.alfa.comand4.utils;
 
+import lombok.AllArgsConstructor;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.ru.RussianAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import ru.itmo.alfa.comand4.configuration.FeatureToggle;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Component
+@AllArgsConstructor
 public class VectorizeText {
 
     // ToDo: https://haifengl.github.io/nlp.html
 
-    public static List<String> getVocabulary(List<String> documents) {
+    private final FeatureToggle feature;
+
+    public List<String> getVocabulary(List<String> documents) {
         // Создаем словарь слов
         Map<String, Integer> wordIndex = new HashMap<>();
         List<String> vocabulary = new ArrayList<>();
 
         // Сначала собираем все уникальные слова из всех документов
         for (String doc : documents) {
-            String[] words = preprocessText(doc);
+            List<String> words = preprocessText(doc);
 
             for (String word : words) {
                 if (!wordIndex.containsKey(word)) {
@@ -49,7 +57,7 @@ public class VectorizeText {
      * @param documents
      * @return
      */
-    public static double[][] vectorize(List<String> documents, List<String> vocabulary) {
+    public double[][] vectorize(List<String> documents, List<String> vocabulary) {
         // Создаем матрицу Term Frequency
         double[][] tfMatrix = new double[documents.size()][];
 
@@ -61,9 +69,9 @@ public class VectorizeText {
         return tfMatrix;
     }
 
-    public static double[] vectorize(String text, List<String> vocabulary) {
+    public double[] vectorize(String text, List<String> vocabulary) {
         double[] vector = new double[vocabulary.size()];
-        String[] words = preprocessText(text);
+        List<String> words = preprocessText(text);
 
         // Считаем TF для нового текста
         for (String word : words) {
@@ -91,12 +99,12 @@ public class VectorizeText {
      * @param maxWords
      * @return
      */
-    private static List<String> getTopFrequentWords(List<String> documents, int maxWords) {
+    private List<String> getTopFrequentWords(List<String> documents, int maxWords) {
         Map<String, Integer> wordFreq = new HashMap<>();
 
         // Считаем частоту всех слов
         for (String doc : documents) {
-            String[] words = preprocessText(doc);
+            List<String> words = preprocessText(doc);
             for (String word : words) {
                 wordFreq.put(word, wordFreq.getOrDefault(word, 0) + 1);
             }
@@ -110,35 +118,43 @@ public class VectorizeText {
                 .collect(Collectors.toList());
     }
 
-    /*private static String[] preprocessText(String text) {
-        return text.toLowerCase()
-                .replaceAll("[^a-zа-яё\\s]", " ") // Удаляем спецсимволы
-                .replaceAll("\\s+", " ")         // Убираем лишние пробелы
-                .trim()
-                .split("\\s+");
-    }*/
+    public List<String> preprocessText(String text) {
+        List<String> result;
 
-    public static String[] preprocessText(String text)  {
-        List<String> result = new ArrayList<>();
-        try (Analyzer analyzer = new RussianAnalyzer()) {
-            try (TokenStream tokenStream = analyzer.tokenStream("content", text)) {
-                CharTermAttribute attribute = tokenStream.addAttribute(CharTermAttribute.class);
-                tokenStream.reset();
+        if (feature.getMorfology().getSteming()) {
+            // Морфология включена
+            result = new ArrayList<>();
+            try (Analyzer analyzer = new RussianAnalyzer()) {
+                try (TokenStream tokenStream = analyzer.tokenStream("content", text)) {
+                    CharTermAttribute attribute = tokenStream.addAttribute(CharTermAttribute.class);
+                    tokenStream.reset();
 
-                while (tokenStream.incrementToken()) {
-                    String term = attribute.toString();
-                    if (term.length() > 2) {
+                    while (tokenStream.incrementToken()) {
+                        String term = attribute.toString();
                         result.add(term);
                     }
-                }
 
-                tokenStream.end();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                    tokenStream.end();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
+        } else {
+            // Морфология отключена
+            String[] r = text.toLowerCase()
+                    .replaceAll("[^a-zа-яё\\s]", " ") // Удаляем спецсимволы
+                    .replaceAll("\\s+", " ")         // Убираем лишние пробелы
+                    .trim()
+                    .split("\\s+");
+            result = List.of(r);
         }
 
-        return result.toArray(new String[result.size()]);
+        int size = feature.getMorfology().getWordlenght();
+        if (size > 0) {
+            result = result.stream().filter(s -> s.length() >= size).toList();
+        }
+
+        return result;
     }
 
 }

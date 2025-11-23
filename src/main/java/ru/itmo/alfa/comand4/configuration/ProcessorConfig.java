@@ -3,6 +3,7 @@ package ru.itmo.alfa.comand4.configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import ru.itmo.alfa.comand4.model.entity.SupportTicket;
 import ru.itmo.alfa.comand4.model.serial.ModelData;
 import ru.itmo.alfa.comand4.repository.CsvTicketSource;
@@ -20,7 +21,10 @@ public class ProcessorConfig {
 
     @Bean
     public ModelData getModelData(
-            @Value("${datasource.csv.filepath}") String filePath
+            @Value("${datasource.csv.filepath}") String filePath,
+            FeatureToggle feature,
+            VectorizeText vectorizer,
+            StopWords stopWords
     ) {
         // Загрузка данных
         List<SupportTicket> tickets = new CsvTicketSource(filePath).getAllTicket();
@@ -31,15 +35,15 @@ public class ProcessorConfig {
                 .toList();
 
         // Создать словарь
-        List<String> vocabulary = VectorizeText.getVocabulary(documents);
-        try {
-            StopWords stopWords = new StopWords();
+        List<String> vocabulary = vectorizer.getVocabulary(documents);
+
+        if (feature.getMorfology().getStopwords()) {
+            // Применяем словарь стоп слов
             vocabulary = vocabulary.stream().filter(v -> !stopWords.contains(v)).toList();
-        } catch (IOException e) {
         }
 
         // Векторизация
-        double[][] features = VectorizeText.vectorize(documents, vocabulary);
+        double[][] features = vectorizer.vectorize(documents, vocabulary);
 
         // Кластеризация
         int optimalK = ClusterCounting.findOptimalK(features);

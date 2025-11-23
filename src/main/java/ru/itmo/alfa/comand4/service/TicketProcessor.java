@@ -1,5 +1,6 @@
 package ru.itmo.alfa.comand4.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.itmo.alfa.comand4.model.dto.SimilarTicket;
 import ru.itmo.alfa.comand4.model.dto.TicketRequest;
@@ -24,6 +25,9 @@ public class TicketProcessor {
     private final KMeans model;
     private final ClusterProfiler clusterProfiler;
 
+    @Autowired
+    private VectorizeText vectorizer;
+
     public TicketProcessor(ModelData modelData) {
         this.vocabulary = modelData.getVocabulary();
         this.model = modelData.getModel();
@@ -32,7 +36,7 @@ public class TicketProcessor {
 
     public TicketResponse processNewTicket(TicketRequest request) {
         // Векторизуем новую заявку
-        double[] features = VectorizeText.vectorize(request.getDescription(), vocabulary);
+        double[] features = vectorizer.vectorize(request.getDescription(), vocabulary);
 
         // Предсказываем кластер
         int clusterId = model.predict(features);
