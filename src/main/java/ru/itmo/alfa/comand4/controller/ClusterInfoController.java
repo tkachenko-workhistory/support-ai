@@ -1,5 +1,9 @@
 package ru.itmo.alfa.comand4.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +25,19 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/clusters")
 @AllArgsConstructor
+@Tag(name = "Cluster Analysis", description = "API для анализа результатов кластеризации обращений техподдержки")
 public class ClusterInfoController {
+
     private final ModelData modelData;
 
+    @Operation(
+            summary = "Полная информация о кластеризации",
+            description = "Возвращает детальную информацию о всех кластерах, включая метрики качества, распределение тикетов и рекомендации по обработке."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Успешный запрос"),
+            @ApiResponse(responseCode = "503", description = "Модель не загружена")
+    })
     @GetMapping("/info")
     public ResponseEntity<ClusterInfoResponse> getClusterInfo() {
         if (modelData == null || modelData.getModel() == null) {
@@ -87,9 +101,15 @@ public class ClusterInfoController {
         }
     }
 
-    /**
-     * Информация о конкретном кластере
-     */
+    @Operation(
+            summary = "Информация о конкретном кластере",
+            description = "Возвращает детальную информацию о конкретном кластере, включая ключевые слова, рекомендации и метрики качества."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Успешный запрос"),
+            @ApiResponse(responseCode = "400", description = "Неверный идентификатор кластера"),
+            @ApiResponse(responseCode = "503", description = "Модель не загружена")
+    })
     @GetMapping("/{clusterId}")
     public ResponseEntity<ClusterDetails> getClusterDetails(@PathVariable int clusterId) {
         if (modelData == null || modelData.getModel() == null) {
@@ -131,6 +151,11 @@ public class ClusterInfoController {
     /**
      * Информация о словаре
      */
+    @Operation(
+            summary = "Информация о словаре",
+            description = "Возвращает информацию о словаре, используемом для векторизации текста, включая самые частые и редкие термины."
+    )
+    @ApiResponse(responseCode = "200", description = "Успешный запрос")
     @GetMapping("/vocabulary")
     public ResponseEntity<VocabularyInfo> getVocabularyInfo() {
         if (modelData == null || modelData.getVocabulary() == null) {
@@ -153,15 +178,16 @@ public class ClusterInfoController {
                     .collect(Collectors.toList()));
 
             return ResponseEntity.ok(info);
-
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    /**
-     * Статистика качества кластеризации
-     */
+    @Operation(
+            summary = "Метрики качества кластеризации",
+            description = "Возвращает технические метрики качества кластеризации: WCSS, распределение по кластерам и другие показатели."
+    )
+    @ApiResponse(responseCode = "200", description = "Успешный запрос")
     @GetMapping("/quality")
     public ResponseEntity<Map<String, Object>> getQualityMetrics() {
         if (modelData == null || modelData.getModel() == null) {
