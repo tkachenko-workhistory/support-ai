@@ -1,7 +1,7 @@
 package ru.itmo.alfa.comand4.domain.stability.model;
 
 import lombok.Getter;
-import ru.itmo.alfa.comand4.domain.ticked.model.SupportTicket;
+import ru.itmo.alfa.comand4.core.dto.SupportTicket;
 
 import java.util.List;
 

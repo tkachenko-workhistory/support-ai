@@ -4,7 +4,7 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
-import ru.itmo.alfa.comand4.domain.ticked.model.SupportTicket;
+import ru.itmo.alfa.comand4.core.dto.SupportTicket;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

@@ -8,7 +8,7 @@ import ru.itmo.alfa.comand4.core.util.source.CsvReader;
 import ru.itmo.alfa.comand4.core.util.morfology.Vocabulary;
 import ru.itmo.alfa.comand4.core.model.ModelData;
 import ru.itmo.alfa.comand4.core.util.clustering.ClusterProfiler;
-import ru.itmo.alfa.comand4.domain.ticked.model.SupportTicket;
+import ru.itmo.alfa.comand4.core.dto.SupportTicket;
 import ru.itmo.alfa.comand4.core.util.morfology.VectorizeText;
 import smile.clustering.KMeans;
 

@@ -1,4 +1,4 @@
-package ru.itmo.alfa.comand4.domain.ticked.model;
+package ru.itmo.alfa.comand4.core.dto;
 
 import lombok.Getter;
 

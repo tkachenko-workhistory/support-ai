@@ -6,7 +6,7 @@ import ru.itmo.alfa.comand4.domain.stability.model.ClusterMapping;
 import ru.itmo.alfa.comand4.domain.stability.model.ClusterStats;
 import ru.itmo.alfa.comand4.domain.stability.model.DataSplit;
 import ru.itmo.alfa.comand4.domain.stability.model.StabilityResult;
-import ru.itmo.alfa.comand4.domain.ticked.model.SupportTicket;
+import ru.itmo.alfa.comand4.core.dto.SupportTicket;
 import ru.itmo.alfa.comand4.core.util.morfology.VectorizeText;
 import smile.clustering.KMeans;
 import java.awt.*;

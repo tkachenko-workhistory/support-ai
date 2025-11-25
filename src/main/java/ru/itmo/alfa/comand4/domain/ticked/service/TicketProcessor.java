@@ -66,7 +66,7 @@ public class TicketProcessor {
 
 
     private double calculateConfidence(double[] features, int clusterId) {
-        // Простая метрика уверенности - расстояние до центра кластера
+        // Метрика уверенности: расстояние до центра кластера
         double[] centroid = model.centroids[clusterId];
         double distance = 0.0;
 

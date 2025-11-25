@@ -5,9 +5,8 @@ import org.springframework.stereotype.Component;
 import ru.itmo.alfa.comand4.configuration.FeatureToggle;
 import ru.itmo.alfa.comand4.core.util.morfology.Vocabulary;
 import ru.itmo.alfa.comand4.core.model.ClusterProfile;
-import ru.itmo.alfa.comand4.domain.ticked.model.SupportTicket;
+import ru.itmo.alfa.comand4.core.dto.SupportTicket;
 import ru.itmo.alfa.comand4.core.util.morfology.StopWords;
-import ru.itmo.alfa.comand4.core.util.morfology.VectorizeText;
 
 import java.util.*;
 import java.util.stream.Collectors;

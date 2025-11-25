@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.itmo.alfa.comand4.core.service.ModelDataService;
 import ru.itmo.alfa.comand4.domain.stability.model.StabilityResult;
-import ru.itmo.alfa.comand4.domain.ticked.model.SupportTicket;
+import ru.itmo.alfa.comand4.core.dto.SupportTicket;
 import ru.itmo.alfa.comand4.core.util.source.CsvReader;
 import ru.itmo.alfa.comand4.domain.stability.service.ClusterStabilityService;
 
