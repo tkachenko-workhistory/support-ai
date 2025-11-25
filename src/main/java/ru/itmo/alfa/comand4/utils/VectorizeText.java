@@ -121,6 +121,10 @@ public class VectorizeText {
     public List<String> preprocessText(String text) {
         List<String> result;
 
+        text = text.toLowerCase()
+                .replaceAll("[^a-zа-яё\\s]", " ") // Удаляем спецсимволы
+                .replaceAll("\\s+", " ")         // Убираем лишние пробелы
+                .trim();
         if (feature.getMorfology().getSteming()) {
             // Морфология включена
             result = new ArrayList<>();
@@ -141,11 +145,7 @@ public class VectorizeText {
             }
         } else {
             // Морфология отключена
-            String[] r = text.toLowerCase()
-                    .replaceAll("[^a-zа-яё\\s]", " ") // Удаляем спецсимволы
-                    .replaceAll("\\s+", " ")         // Убираем лишние пробелы
-                    .trim()
-                    .split("\\s+");
+            String[] r = text.split("\\s+");
             result = List.of(r);
         }
 

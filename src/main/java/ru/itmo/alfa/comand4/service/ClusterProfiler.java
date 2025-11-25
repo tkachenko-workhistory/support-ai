@@ -60,7 +60,7 @@ public class ClusterProfiler {
     private List<String> analyzeCommonIssues(List<SupportTicket> tickets) {
         Map<String, Integer> wordFreq = new HashMap<>();
         for (SupportTicket ticket : tickets) {
-            String text = (ticket.getCustomerIssue() + " " + ticket.getTechResponse()).toLowerCase();
+            String text = ticket.getCustomerIssue().toLowerCase();
             String[] words = text.split("\\s+");
             for (String word : words) {
                 if (word.length() > 3) {

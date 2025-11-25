@@ -27,6 +27,8 @@ public class KMeansVisualizer {
         TSNE tsne = new TSNE(features, 2);
         double[][] features2D = tsne.coordinates;
 
+        // ToDO: UMAP
+
         // Создаем метки для точек
         String[] labels = new String[features2D.length];
         int[] clusters = kmeans.y;
