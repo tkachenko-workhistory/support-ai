@@ -22,17 +22,13 @@ public class CsvTicketSource implements TicketHistory {
     @Override
     public List<SupportTicket> getAllTicket() {
         List<SupportTicket> tickets = new ArrayList<>();
-      /* try (CSVReader reader =
-                     new CSVReaderBuilder(new FileReader(filename)).withSeparator('\t').build()
-        ) {
+        /*try (CSVReader reader = new CSVReader(new FileReader(filename))) {
             List<String[]> allData = reader.readAll();
 
             // Пропускаем заголовок
             for (int i = 1; i < allData.size(); i++) {
                 String[] row = allData.get(i);
-                if (row.length >= 7) {
-                    tickets.add(new SupportTicket(row));
-                }
+                tickets.add(new SupportTicket(row));
             }
         } catch (IOException | CsvException e) {
             throw new RuntimeException(e);
@@ -46,9 +42,7 @@ public class CsvTicketSource implements TicketHistory {
             // Пропускаем заголовок
             for (int i = 1; i < allData.size(); i++) {
                 String[] row = allData.get(i);
-                if (row.length >= 8) {
                     tickets.add(new SupportTicket(row));
-                }
             }
         } catch (IOException | CsvException e) {
             throw new RuntimeException(e);

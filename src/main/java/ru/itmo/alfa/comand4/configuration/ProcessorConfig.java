@@ -24,6 +24,7 @@ public class ProcessorConfig {
             @Value("${datasource.csv.filepath}") String filePath,
             FeatureToggle feature,
             VectorizeText vectorizer,
+            ClusterProfiler clusterProfiler,
             StopWords stopWords
     ) {
         // Загрузка данных
@@ -50,7 +51,6 @@ public class ProcessorConfig {
         KMeans model = KMeans.fit(features, optimalK);
 
         // Создание Базы Знаний о кластерах
-        ClusterProfiler clusterProfiler = new ClusterProfiler();
         int[] clusterAssignments = model.y; // Получаем назначения кластеров
         clusterProfiler.buildFromTickets(tickets, clusterAssignments);
 

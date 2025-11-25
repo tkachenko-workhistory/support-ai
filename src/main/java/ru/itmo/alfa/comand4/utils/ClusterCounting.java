@@ -19,7 +19,6 @@ public class ClusterCounting {
         for (int k = 2; k <= maxK; k++) {
             KMeans kmeans = KMeans.fit(features, k);
             distortions.add(kmeans.distortion);
-            //System.out.println("k=" + k + ", WCSS=" + kmeans.distortion);
         }
 
         // Находим "локоть" - точку, где уменьшение WCSS замедляется

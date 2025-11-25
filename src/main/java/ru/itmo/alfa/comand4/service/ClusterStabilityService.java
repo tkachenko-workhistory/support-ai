@@ -1,6 +1,5 @@
 package ru.itmo.alfa.comand4.service;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.itmo.alfa.comand4.model.dto.ClusterMapping;
@@ -10,9 +9,6 @@ import ru.itmo.alfa.comand4.model.dto.StabilityResult;
 import ru.itmo.alfa.comand4.model.entity.SupportTicket;
 import ru.itmo.alfa.comand4.utils.VectorizeText;
 import smile.clustering.KMeans;
-import smile.plot.swing.BarPlot;
-import smile.plot.swing.Canvas;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +28,10 @@ public class ClusterStabilityService {
             KMeans originalModel,
             int[] originalClusters
     ) {
+        System.out.println("=== ДИАГНОСТИКА УСТОЙЧИВОСТИ ===");
+
+        // ДИАГНОСТИКА: анализируем векторизацию
+        analyzeVectorization(allTickets, vocabulary);
 
         // Разделяем данные: 75% для обучения, 25% для теста (стратифицированно)
         DataSplit split = splitDataStratified(allTickets, originalClusters, 0.25);
@@ -44,27 +44,53 @@ public class ClusterStabilityService {
                 vocabulary
         );
 
-        KMeans newModel = KMeans.fit(trainFeatures, originalModel.k);
+        //KMeans newModel = KMeans.fit(trainFeatures, originalModel.k);
 
-        // Кластеризуем тестовые данные (25%) новой моделью
-        double[][] testFeatures = vectorizer.vectorize(
-                split.getTestTickets().stream()
-                        .map(SupportTicket::getCustomerIssue)
-                        .toList(),
-                vocabulary
-        );
+        // Используем центроиды оригинальной модели для инициализации
+        KMeans newModel = fitWithDeterministicInitialization(trainFeatures, originalModel);
 
-        int[] testClusters = new int[testFeatures.length];
-        for (int i = 0; i < testFeatures.length; i++) {
-            testClusters[i] = newModel.predict(testFeatures[i]);
+        // ДИАГНОСТИКА: Сравниваем центроиды
+        System.out.println("=== СРАВНЕНИЕ ЦЕНТРОИДОВ ===");
+        for (int i = 0; i < originalModel.k; i++) {
+            double distance = euclideanDistance(
+                    originalModel.centroids[i],
+                    newModel.centroids[i]
+            );
+            System.out.printf("Центроид %d: расстояние = %.6f%n", i, distance);
         }
 
-        // Сравниваем с исходными кластерами
+        // ДИАГНОСТИКА: Анализируем распределение кластеров
+        analyzeClusterDistribution("ОРИГИНАЛЬНАЯ модель", originalModel, trainFeatures);
+        analyzeClusterDistribution("НОВАЯ модель", newModel, trainFeatures);
+
+        // Собираем предсказания для тестовых данных
+        List<Integer> originalPredictions = new ArrayList<>();
+        List<Integer> newPredictions = new ArrayList<>();
+        List<double[]> testFeaturesList = new ArrayList<>();
+
+        for (SupportTicket ticket : split.getTestTickets()) {
+            double[] features = vectorizer.vectorize(ticket.getCustomerIssue(), vocabulary);
+            testFeaturesList.add(features);
+
+            int originalClusterId = originalModel.predict(features);
+            int newClusterId = newModel.predict(features);
+
+            originalPredictions.add(originalClusterId);
+            newPredictions.add(newClusterId);
+        }
+
+        // ДИАГНОСТИКА: Детальное сравнение предсказаний
+        detailedPredictionAnalysis(testFeaturesList, originalPredictions, newPredictions,
+                originalModel, newModel);
+
+        // Анализ совпадений
+        analyzePredictions(originalPredictions, newPredictions);
+
+        // Сравниваем предсказания двух моделей
         return compareClusterAssignments(
                 split.getTestTickets(),
-                split.getOriginalTestClusters(),
-                testClusters,
-                originalModel.k
+                originalPredictions,
+                newPredictions
         );
     }
 
@@ -112,9 +138,8 @@ public class ClusterStabilityService {
 
     private StabilityResult compareClusterAssignments(
             List<SupportTicket> testTickets,
-            List<Integer> originalClusters,
-            int[] newClusters,
-            int totalClusters
+            List<Integer> originalPredictions,
+            List<Integer> newPredictions
     ) {
 
         int totalTestSamples = testTickets.size();
@@ -123,10 +148,10 @@ public class ClusterStabilityService {
 
         Map<Integer, ClusterMapping> clusterMapping = new HashMap<>();
 
-        // Считаем соответствия между старыми и новыми кластерами
+        // Считаем соответствия между предсказаниями двух моделей
         for (int i = 0; i < totalTestSamples; i++) {
-            int originalCluster = originalClusters.get(i);
-            int newCluster = newClusters[i];
+            int originalCluster = originalPredictions.get(i);
+            int newCluster = newPredictions.get(i);
 
             if (originalCluster == newCluster) {
                 correctAssignments++;
@@ -140,7 +165,8 @@ public class ClusterStabilityService {
                     .addAssignment(newCluster);
         }
 
-        double accuracy = (double) correctAssignments / totalTestSamples * 100;
+        double accuracy = totalTestSamples > 0 ?
+                (double) correctAssignments / totalTestSamples * 100 : 0;
 
         return new StabilityResult(
                 totalTestSamples,
@@ -390,4 +416,213 @@ public class ClusterStabilityService {
         g.drawString(title, (width - titleWidth) / 2, 40);
     }
 
+    private void analyzeClusterDistribution(String modelName, KMeans model, double[][] features) {
+        Map<Integer, Integer> distribution = new HashMap<>();
+        for (int clusterId : model.y) {
+            distribution.put(clusterId, distribution.getOrDefault(clusterId, 0) + 1);
+        }
+        System.out.println(modelName + " распределение: " + distribution);
+    }
+
+    private void detailedPredictionAnalysis(List<double[]> testFeatures,
+                                            List<Integer> originalPredictions,
+                                            List<Integer> newPredictions,
+                                            KMeans originalModel, KMeans newModel) {
+
+        System.out.println("=== ДЕТАЛЬНЫЙ АНАЛИЗ ПРЕДСКАЗАНИЙ ===");
+
+        int samePredictions = 0;
+        int differentPredictions = 0;
+
+        for (int i = 0; i < Math.min(5, testFeatures.size()); i++) {
+            double[] features = testFeatures.get(i);
+            int origCluster = originalPredictions.get(i);
+            int newCluster = newPredictions.get(i);
+
+            // Вычисляем расстояния до центроидов
+            double[] origDistances = calculateDistancesToCentroids(features, originalModel.centroids);
+            double[] newDistances = calculateDistancesToCentroids(features, newModel.centroids);
+
+            System.out.printf("Пример %d:%n", i);
+            System.out.printf("  Предсказания: оригинал=%d, новый=%d%n", origCluster, newCluster);
+            System.out.printf("  Расстояния оригинал: %s%n", Arrays.toString(origDistances));
+            System.out.printf("  Расстояния новый: %s%n", Arrays.toString(newDistances));
+
+            if (origCluster == newCluster) {
+                samePredictions++;
+            } else {
+                differentPredictions++;
+            }
+        }
+
+        System.out.printf("Совпадающих предсказаний: %d/%d%n", samePredictions, testFeatures.size());
+    }
+
+    private double[] calculateDistancesToCentroids(double[] features, double[][] centroids) {
+        double[] distances = new double[centroids.length];
+        for (int i = 0; i < centroids.length; i++) {
+            distances[i] = euclideanDistance(features, centroids[i]);
+        }
+        return distances;
+    }
+
+    private double euclideanDistance(double[] a, double[] b) {
+        double sum = 0;
+        for (int i = 0; i < a.length; i++) {
+            sum += Math.pow(a[i] - b[i], 2);
+        }
+        return Math.sqrt(sum);
+    }
+
+    private void analyzeVectorization(List<SupportTicket> tickets, List<String> vocabulary) {
+        double[][] features = vectorizer.vectorize(
+                tickets.stream().map(SupportTicket::getCustomerIssue).toList(),
+                vocabulary
+        );
+
+        System.out.println("=== АНАЛИЗ ВЕКТОРИЗАЦИИ ===");
+        System.out.println("Размер vocabulary: " + vocabulary.size());
+        System.out.println("Количество векторов: " + features.length);
+        System.out.println("Размерность векторов: " + features[0].length);
+
+        // Анализ первых нескольких векторов
+        for (int i = 0; i < Math.min(3, features.length); i++) {
+            System.out.printf("Вектор %d: %s%n", i, Arrays.toString(features[i]));
+
+            // Статистика по вектору
+            double sum = Arrays.stream(features[i]).sum();
+            int nonZero = (int) Arrays.stream(features[i]).filter(v -> v > 0).count();
+            System.out.printf("  Сумма: %.3f, Ненулевых: %d/%d%n",
+                    sum, nonZero, features[i].length);
+        }
+
+        // Проверка на уникальность векторов
+        Set<String> uniqueVectors = new HashSet<>();
+        for (double[] vector : features) {
+            uniqueVectors.add(Arrays.toString(vector));
+        }
+        System.out.println("Уникальных векторов: " + uniqueVectors.size() + "/" + features.length);
+    }
+
+
+    private KMeans fitWithDeterministicInitialization(double[][] data, KMeans originalModel) {
+        int k = originalModel.k;
+        int maxIter = 100;
+        double tol = 1e-4;
+
+        int n = data.length;
+        int d = data[0].length;
+        int[] y = new int[n];
+
+        // ИСПОЛЬЗУЕМ ЦЕНТРОИДЫ ОРИГИНАЛЬНОЙ МОДЕЛИ КАК НАЧАЛЬНОЕ ПРИБЛИЖЕНИЕ
+        double[][] centroids = new double[k][d];
+        for (int i = 0; i < k; i++) {
+            centroids[i] = originalModel.centroids[i].clone();
+        }
+
+        // K-means алгоритм
+        double distortion = assignClusters(data, centroids, y);
+        System.out.printf("Distortion after initialization: %.4f%n", distortion);
+
+        int[] size = new int[k];
+        double[][] sum = new double[k][d];
+
+        double diff = Double.MAX_VALUE;
+
+        for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
+            // Обновляем центроиды
+            updateCentroids(centroids, data, y, size, sum);
+
+            // Пересчитываем кластеры
+            double newDistortion = assignClusters(data, centroids, y);
+
+            System.out.printf("Iteration %d: distortion = %.4f, improvement = %.4f%n",
+                    iter, newDistortion, diff);
+
+            diff = distortion - newDistortion;
+            distortion = newDistortion;
+
+            if (diff <= tol) {
+                break;
+            }
+        }
+
+        return new KMeans(distortion, centroids, y);
+    }
+
+    private double assignClusters(double[][] data, double[][] centroids, int[] y) {
+        double distortion = 0.0;
+        int k = centroids.length;
+
+        for (int i = 0; i < data.length; i++) {
+            double minDistance = Double.MAX_VALUE;
+            int bestCluster = 0;
+
+            for (int j = 0; j < k; j++) {
+                double distance = euclideanDistance(data[i], centroids[j]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    bestCluster = j;
+                }
+            }
+
+            y[i] = bestCluster;
+            distortion += minDistance;
+        }
+
+        return distortion;
+    }
+
+    private void updateCentroids(double[][] centroids, double[][] data, int[] y, int[] size, double[][] sum) {
+        int k = centroids.length;
+        int d = centroids[0].length;
+
+        // Обнуляем суммы и счетчики
+        for (int i = 0; i < k; i++) {
+            size[i] = 0;
+            Arrays.fill(sum[i], 0.0);
+        }
+
+        // Суммируем векторы по кластерам
+        for (int i = 0; i < data.length; i++) {
+            int cluster = y[i];
+            size[cluster]++;
+            for (int j = 0; j < d; j++) {
+                sum[cluster][j] += data[i][j];
+            }
+        }
+
+        // Вычисляем новые центроиды
+        for (int i = 0; i < k; i++) {
+            if (size[i] > 0) {
+                for (int j = 0; j < d; j++) {
+                    centroids[i][j] = sum[i][j] / size[i];
+                }
+            }
+            // Если кластер пустой, оставляем старый центроид
+        }
+    }
+
+    private void analyzePredictions(List<Integer> original, List<Integer> newPredictions) {
+        int matches = 0;
+        Map<String, Integer> mapping = new HashMap<>();
+
+        for (int i = 0; i < original.size(); i++) {
+            if (original.get(i).equals(newPredictions.get(i))) {
+                matches++;
+            }
+            String key = original.get(i) + "->" + newPredictions.get(i);
+            mapping.put(key, mapping.getOrDefault(key, 0) + 1);
+        }
+
+        double accuracy = (double) matches / original.size() * 100;
+        System.out.printf("Совпадающих предсказаний: %d/%d (%.1f%%)%n",
+                matches, original.size(), accuracy);
+
+        System.out.println("Маппинг кластеров:");
+        mapping.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(10)
+                .forEach(entry -> System.out.printf("  %s: %d%n", entry.getKey(), entry.getValue()));
+    }
 }

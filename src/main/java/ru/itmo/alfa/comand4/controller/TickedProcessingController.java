@@ -23,8 +23,6 @@ public class TickedProcessingController {
     public ResponseEntity<TicketResponse> analyzeTicket(
             @RequestBody TicketRequest ticketRequest
     ) {
-        // ToDo: Валидация входных данных
-
         // Обрабатываем заявку
         TicketResponse ticketResponse = ticketProcessor.processNewTicket(ticketRequest);
         return ResponseEntity.ok(ticketResponse);

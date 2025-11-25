@@ -1,12 +1,27 @@
 package ru.itmo.alfa.comand4.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ru.itmo.alfa.comand4.configuration.FeatureToggle;
 import ru.itmo.alfa.comand4.model.serial.ClusterProfile;
 import ru.itmo.alfa.comand4.model.entity.SupportTicket;
+import ru.itmo.alfa.comand4.utils.StopWords;
+import ru.itmo.alfa.comand4.utils.VectorizeText;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Component
 public class ClusterProfiler {
+
+    @Autowired
+    VectorizeText vectorize;
+
+    @Autowired
+    FeatureToggle feature;
+
+    @Autowired
+    StopWords stopWords;
 
     private Map<Integer, ClusterProfile> clusterProfiles = new HashMap<>();
 
@@ -61,9 +76,10 @@ public class ClusterProfiler {
         Map<String, Integer> wordFreq = new HashMap<>();
         for (SupportTicket ticket : tickets) {
             String text = ticket.getCustomerIssue().toLowerCase();
-            String[] words = text.split("\\s+");
+            var words = vectorize.preprocessText(text);
             for (String word : words) {
-                if (word.length() > 3) {
+                if (feature.getMorfology().getStopwords() && !stopWords.contains(word)) {
+                    // Применяем словарь стоп слов
                     wordFreq.put(word, wordFreq.getOrDefault(word, 0) + 1);
                 }
             }
