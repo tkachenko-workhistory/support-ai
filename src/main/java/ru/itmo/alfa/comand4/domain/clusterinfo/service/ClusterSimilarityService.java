@@ -51,8 +51,11 @@ public class ClusterSimilarityService {
                 double b = qualityService.calculateAverageDistanceToSpecificCluster(features, labels, i, clusterB);
 
                 if (a > 0 && b > 0 && b < Double.MAX_VALUE) {
-                    // Silhouette-like мера
-                    double similarity = b / (a + b);
+                    double maxAB = Math.max(a, b);
+                    double silhouette = (b - a) / maxAB;  // Диапазон: [-1, 1]
+
+                    // Преобразуем в [0, 1] для тепловой карты
+                    double similarity = (silhouette + 1) / 2;
                     totalSimilarity += similarity;
                     count++;
                 }

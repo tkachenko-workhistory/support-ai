@@ -115,12 +115,20 @@ public class HeatmapGenerator {
     private Color getSimpleMonochromeColor(double value, double minVal, double maxVal) {
         double normalized = (value - minVal) / (maxVal - minVal);
 
-        // Линейный градиент: белый (0.0) → красный (1.0)
-        int red = 255;
-        int green = 255 - (int) (normalized * 255);
-        int blue = 255 - (int) (normalized * 255);
-
-        return new Color(red, Math.max(0, green), Math.max(0, blue));
+        // Контрольные точки градиента
+        if (normalized < 0.3) {
+            // 0.0-0.3: почти белый → светло-розовый
+            double t = normalized / 0.3;
+            return new Color(255, 250 - (int)(t * 50), 245 - (int)(t * 45));
+        } else if (normalized < 0.7) {
+            // 0.3-0.7: светло-розовый → красный (самый плавный участок)
+            double t = (normalized - 0.3) / 0.4;
+            return new Color(255, 200 - (int)(t * 150), 200 - (int)(t * 150));
+        } else {
+            // 0.7-1.0: красный → темно-красный
+            double t = (normalized - 0.7) / 0.3;
+            return new Color(255, 50 - (int)(t * 50), 50 - (int)(t * 50));
+        }
     }
 
     private void drawLegend(Graphics2D g, int width, int height, int margin, SimilarityMatrix matrix) {

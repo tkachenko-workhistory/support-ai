@@ -3,6 +3,7 @@ package ru.itmo.alfa.comand4.core.service;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.itmo.alfa.comand4.configuration.FeatureToggle;
 import ru.itmo.alfa.comand4.core.util.clustering.ClusterCounting;
 import ru.itmo.alfa.comand4.core.util.source.CsvReader;
 import ru.itmo.alfa.comand4.core.util.morfology.Vocabulary;
@@ -19,6 +20,8 @@ import java.util.List;
 @Component
 public class ModelDataService {
 
+    private final FeatureToggle feature;
+
     private final Vocabulary vocabularyService;
     private final VectorizeText vectorizer;
     private final ClusterProfiler clusterProfiler;
@@ -26,13 +29,13 @@ public class ModelDataService {
     @Value("${datasource.csv.filepath}")
     private String filePath;
 
+    public ModelDataService(FeatureToggle feature, Vocabulary vocabularyService, VectorizeText vectorizer, ClusterProfiler clusterProfiler) {
+        this.feature = feature;
 
-    public ModelDataService(Vocabulary vocabularyService, VectorizeText vectorizer, ClusterProfiler clusterProfiler) {
         this.vocabularyService = vocabularyService;
         this.vectorizer = vectorizer;
         this.clusterProfiler = clusterProfiler;
     }
-
 
     ModelData modelData;
 
@@ -52,8 +55,13 @@ public class ModelDataService {
         // Векторизация
         double[][] features = vectorizer.vectorize(documents, vocabulary);
 
+        // Задаём количество кластеров
+        int optimalK = 0;
+        if (feature.getClustering().getCount() > 0)
+            optimalK = feature.getClustering().getCount();
+        else
+            optimalK = ClusterCounting.findOptimalK(features);
         // Кластеризация
-        int optimalK = ClusterCounting.findOptimalK(features);
         KMeans model = KMeans.fit(features, optimalK);
 
         // Создание Базы Знаний о кластерах

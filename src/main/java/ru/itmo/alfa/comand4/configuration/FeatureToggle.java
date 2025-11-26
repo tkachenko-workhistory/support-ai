@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 public class FeatureToggle {
 
     private Morfology morfology;
+    private Clustering clustering;
 
     @Getter
     @Setter
@@ -19,5 +20,11 @@ public class FeatureToggle {
         private Boolean steming;
         private Boolean stopwords;
         private Integer wordlenght;
+    }
+
+    @Getter
+    @Setter
+    public static class Clustering {
+        private Integer count;
     }
 }
