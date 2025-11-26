@@ -178,50 +178,12 @@ public class ClusterInfoController {
         }
     }
 
-    @Operation(
-            summary = "Метрики качества кластеризации",
-            description = "Возвращает технические метрики качества кластеризации: WCSS, распределение по кластерам и другие показатели."
-    )
-    @ApiResponse(responseCode = "200", description = "Успешный запрос")
-    @GetMapping("/metrics")
-    public ResponseEntity<Map<String, Object>> getMetrics() {
-        var modelData = modelDataService.getModelData();
-
-        try {
-            KMeans kmeans = modelData.getModel();
-            Map<Integer, Integer> clusterSizes = calculateClusterSizes(kmeans);
-
-            Map<String, Object> metrics = new HashMap<>();
-            metrics.put("totalClusters", kmeans.k);
-            metrics.put("totalSamples", kmeans.y.length);
-            metrics.put("wcss", Math.round(kmeans.distortion * 100.0) / 100.0);
-            metrics.put("avgClusterSize", Math.round((double) kmeans.y.length / kmeans.k * 100.0) / 100.0);
-
-            // Распределение по кластерам
-            metrics.put("clusterDistribution", clusterSizes);
-
-            // Коэффициент вариации размера кластеров
-            double avgSize = (double) kmeans.y.length / kmeans.k;
-            double variance = clusterSizes.values().stream()
-                    .mapToDouble(size -> Math.pow(size - avgSize, 2))
-                    .average()
-                    .orElse(0);
-            double cv = Math.sqrt(variance) / avgSize;
-            metrics.put("sizeVariation", Math.round(cv * 100.0) / 100.0);
-
-            return ResponseEntity.ok(metrics);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
     @Operation(summary = "Оценка качества кластеризации",
             description = """
                     Возвращает метрики качества кластеризации: 
                     * Silhouette Score
-                    * Calinski-Harabasz
-                    * Davies-Bouldin
+                    * WCSS
+                    * BCSS
                     """)
     @GetMapping("/quality")
     public ResponseEntity<ClusterQuality> getQualityMetrics() {
