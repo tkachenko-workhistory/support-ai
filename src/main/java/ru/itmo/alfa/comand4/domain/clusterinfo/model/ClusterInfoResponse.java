@@ -27,16 +27,6 @@ public class ClusterInfoResponse {
 
     @Schema(
             description = """
-                    Within-Cluster Sum of Squares (WCSS) - метрика качества кластеризации.
-                    Чем меньше значение, тем компактнее кластеры.
-                    Используется в методе локтя для определения оптимального K.
-                    """,
-            requiredMode = Schema.RequiredMode.REQUIRED
-    )
-    private double wcss;
-
-    @Schema(
-            description = """
                     Детальная информация по каждому кластеру.
                     Кластеры отсортированы по размеру (от наибольшего к наименьшему).
                     """,
@@ -49,10 +39,9 @@ public class ClusterInfoResponse {
     )
     private Map<String, Object> statistics = new HashMap<>();
 
-    public ClusterInfoResponse(int totalClusters, int totalTickets, double wcss, List<ClusterDetails> clusters) {
+    public ClusterInfoResponse(int totalClusters, int totalTickets, List<ClusterDetails> clusters) {
         this.totalClusters = totalClusters;
         this.totalTickets = totalTickets;
-        this.wcss = wcss;
         this.clusters = clusters;
     }
 }

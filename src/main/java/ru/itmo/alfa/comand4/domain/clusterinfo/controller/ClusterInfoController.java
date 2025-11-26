@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import ru.itmo.alfa.comand4.core.service.ModelDataService;
 import ru.itmo.alfa.comand4.domain.clusterinfo.model.ClusterDetails;
 import ru.itmo.alfa.comand4.domain.clusterinfo.model.ClusterInfoResponse;
+import ru.itmo.alfa.comand4.domain.clusterinfo.model.ClusterQuality;
 import ru.itmo.alfa.comand4.domain.clusterinfo.model.VocabularyInfo;
 import ru.itmo.alfa.comand4.core.model.ClusterProfile;
 import ru.itmo.alfa.comand4.core.util.clustering.ClusterProfiler;
+import ru.itmo.alfa.comand4.domain.clusterinfo.service.ClusterQualityService;
 import smile.clustering.KMeans;
 
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class ClusterInfoController {
 
     private final ModelDataService modelDataService;
+    private final ClusterQualityService qualityService;
 
     @Operation(
             summary = "Полная информация о кластеризации",
@@ -80,7 +83,6 @@ public class ClusterInfoController {
             ClusterInfoResponse response = new ClusterInfoResponse(
                     kmeans.k,
                     totalTickets,
-                    Math.round(kmeans.distortion * 100.0) / 100.0,
                     clusters
             );
 
@@ -181,8 +183,8 @@ public class ClusterInfoController {
             description = "Возвращает технические метрики качества кластеризации: WCSS, распределение по кластерам и другие показатели."
     )
     @ApiResponse(responseCode = "200", description = "Успешный запрос")
-    @GetMapping("/quality")
-    public ResponseEntity<Map<String, Object>> getQualityMetrics() {
+    @GetMapping("/metrics")
+    public ResponseEntity<Map<String, Object>> getMetrics() {
         var modelData = modelDataService.getModelData();
 
         try {
@@ -211,6 +213,24 @@ public class ClusterInfoController {
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @Operation(summary = "Оценка качества кластеризации",
+            description = """
+                    Возвращает метрики качества кластеризации: 
+                    * Silhouette Score
+                    * Calinski-Harabasz
+                    * Davies-Bouldin
+                    """)
+    @GetMapping("/quality")
+    public ResponseEntity<ClusterQuality> getQualityMetrics() {
+        try {
+            var modelData = modelDataService.getModelData();
+            ClusterQuality metrics = qualityService.evaluateQuality(modelData);
+            return ResponseEntity.ok(metrics);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 
