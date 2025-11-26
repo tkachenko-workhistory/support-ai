@@ -8,13 +8,13 @@ import smile.manifold.TSNE;
 import smile.manifold.UMAP;
 import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
-import java.awt.*;
+
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 @Service
-public class VisualizationService {
+public class VisualizationGenerator {
 
     public byte[] generateClusterPlot(
             ModelData modelData,
