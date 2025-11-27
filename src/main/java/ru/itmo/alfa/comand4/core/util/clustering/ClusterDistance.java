@@ -42,7 +42,7 @@ public class ClusterDistance {
         int count = 0;
 
         for (int i = 0; i < features.length; i++) {
-            if (labels[i] == targetCluster) {
+            if (labels[i] == targetCluster && i != pointIndex) {
                 sum += distance(features[pointIndex], features[i]);
                 count++;
             }
