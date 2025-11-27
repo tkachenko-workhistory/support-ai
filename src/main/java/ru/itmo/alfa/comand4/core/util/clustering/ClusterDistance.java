@@ -79,7 +79,7 @@ public class ClusterDistance {
     }
 
     public static double distance(double[] a, double[] b) {
-        return manhattanDistance(a, b);
+        return euclideanDistance(a, b);
     }
 
     /**
@@ -98,16 +98,5 @@ public class ClusterDistance {
             sum += Math.pow(a[i] - b[i], 2);
         }
         return Math.sqrt(sum);
-    }
-
-    /**
-     * Манхэттенское расстояние (L1 норма) - более устойчиво к выбросам
-     */
-    private static double manhattanDistance(double[] a, double[] b) {
-        double sum = 0.0;
-        for (int i = 0; i < a.length; i++) {
-            sum += Math.abs(a[i] - b[i]);
-        }
-        return sum;
     }
 }

@@ -62,7 +62,7 @@ public class ModelDataService {
         else
             optimalK = ClusterCounting.findOptimalK(features);
         // Кластеризация
-        KMeans model = KMeans.fit(features, optimalK);
+        KMeans model = KMeans.fit(features, optimalK, 100, 1e-4);
 
         // Создание Базы Знаний о кластерах
         int[] clusterAssignments = model.y; // Получаем назначения кластеров
