@@ -73,10 +73,11 @@ public class ClusterProfiler {
             String text = ticket.getCustomerIssue().toLowerCase();
             var words = vocabularyService.preprocessText(text);
             for (String word : words) {
-                if (feature.getMorfology().getStopwords() && !stopWords.contains(word)) {
-                    // Применяем словарь стоп слов
-                    wordFreq.put(word, wordFreq.getOrDefault(word, 0) + 1);
-                }
+                // Применяем словарь стоп слов
+                if (feature.getMorfology().getStopwords() && stopWords.contains(word))
+                    continue;
+
+                wordFreq.put(word, wordFreq.getOrDefault(word, 0) + 1);
             }
         }
 
