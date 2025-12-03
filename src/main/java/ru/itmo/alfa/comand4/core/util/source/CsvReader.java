@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class CsvReader {
 
     public static List<SupportTicket> getAllTicket(InputStreamReader stream) {
-        /*try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+        try (CSVReader reader = new CSVReader(stream)) {
             List<String[]> allRows = reader.readAll();
             return allRows.stream()
                     .skip(1)
@@ -22,8 +22,8 @@ public class CsvReader {
                     .collect(Collectors.toList());
         } catch (CsvException | IOException e) {
             throw new RuntimeException("Ошибка парсинга CSV: " + e.getMessage(), e);
-        }*/
-        try (CSVReader reader = new CSVReaderBuilder(stream)
+        }
+        /*try (CSVReader reader = new CSVReaderBuilder(stream)
                 .withCSVParser(new CSVParserBuilder().withSeparator(';').build())
                 .build()) {
             List<String[]> allRows = reader.readAll();
@@ -33,7 +33,7 @@ public class CsvReader {
                     .collect(Collectors.toList());
         } catch (IOException | CsvException e) {
             throw new RuntimeException(e);
-        }
+        }*/
     }
 
 }

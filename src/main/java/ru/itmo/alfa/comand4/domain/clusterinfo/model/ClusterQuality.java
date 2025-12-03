@@ -59,4 +59,9 @@ public class ClusterQuality {
     @Schema(description = "Общее количество образцов")
     private int numberOfSamples;
 
+    private final double balanceIndex;      // [0,1] - чем меньше, тем лучше
+    private final double giniCoefficient;   // [0,1] - чем меньше, тем лучше
+
+    private final int[] clusterSizes;       // размеры каждого кластера
+
 }

@@ -14,16 +14,22 @@ public class ClusterMapping {
         this.originalCluster = originalCluster;
     }
 
-    public void addAssignment(int newCluster) {
-        assignmentCounts.put(newCluster,
-                assignmentCounts.getOrDefault(newCluster, 0) + 1);
+    public void addAssignment(int newClusterId) {
+        assignmentCounts.put(newClusterId,
+                assignmentCounts.getOrDefault(newClusterId, 0) + 1);
     }
 
-    public Map<String, Object> getAssignmentDistribution() {
-        Map<String, Object> distribution = new HashMap<>();
-        for (Map.Entry<Integer, Integer> entry : assignmentCounts.entrySet()) {
-            distribution.put("To_Cluster_" + entry.getKey(), entry.getValue());
-        }
-        return distribution;
+    // Новые методы для получения статистики
+    public int getCorrectAssignments() {
+        return assignmentCounts.getOrDefault(originalCluster, 0);
     }
+
+    public int getWrongAssignments() {
+        return getTotalAssignments() - getCorrectAssignments();
+    }
+
+    public int getTotalAssignments() {
+        return assignmentCounts.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
 }

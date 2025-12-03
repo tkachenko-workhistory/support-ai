@@ -24,10 +24,10 @@ public class StabilityResult {
 
         // Дополнительная статистика по кластерам
         Map<String, Object> clusterStats = new HashMap<>();
-        for (ClusterMapping mapping : clusterMapping.values()) {
+       /* for (ClusterMapping mapping : clusterMapping.values()) {
             clusterStats.put("Cluster_" + mapping.getOriginalCluster(),
                     mapping.getAssignmentDistribution());
-        }
+        }*/
         histogram.put("clusterDistribution", clusterStats);
 
         return histogram;
